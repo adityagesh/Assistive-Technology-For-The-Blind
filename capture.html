@@ -1,0 +1,106 @@
+<HTML>
+    <HEAD>
+        <TITLE>Capture</TITLE>
+        <style>
+        .inputfile {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+            position: absolute;
+            left: 45%;
+            top: 35%;
+        }
+        .inputfile + label {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: white;
+            background-color: DodgerBlue;
+            display: inline-block;
+            cursor: pointer;
+            height: 150px;
+            width: 150px;
+            position: absolute;
+            left: 45%;
+            top: 35%;
+        }
+
+        .inputfile:focus + label,
+        .inputfile + label:hover {
+            background-color: RoyalBlue;
+            height: 150px;
+            width: 150px;
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute;
+            left: 45%;
+            top: 35%;
+        }
+        #voice_button{
+            display: none;
+            background-image: url("speaker.png");
+            background-color: RoyalBlue;
+            border: 5px;
+            background-position: center;
+            background-repeat: no-repeat; 
+            background-size: contain;
+            height: 150px;
+            width: 150px;
+            border-radius: 50%;
+            position: absolute;
+            left: 45%;
+            top: 35%;
+        }
+        </style>
+    </HEAD>
+    <BODY>
+        <form>
+        <input id="file-input" class="inputfile" type="file" accept="image/*" capture="camera">
+        <label for="file-input"></label>
+        <img id="imgout">
+        <p id="out">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        <script>
+            let audio='Could not recognize image'
+            function say(m) {
+                console.log("say")
+                var msg = new SpeechSynthesisUtterance();
+                var voices = window.speechSynthesis.getVoices();
+                msg.voice = voices[5];
+                msg.voiceURI = "native";
+                msg.volume = 1;
+                msg.rate = 1;
+                msg.pitch = 0.8;
+                msg.text = m;
+                msg.lang = 'en-US';
+                speechSynthesis.speak(msg);
+            }
+
+           $("#file-input").change(function(e){
+               var fileReader = new FileReader();
+               fileReader.onload = function () {
+                    var data = fileReader.result;
+                    $("#imgout").attr("height","300")
+                    $("#imgout").attr("width","300")
+                    $("#imgout").attr("src",data)
+                    data=data.replace("data:image/jpeg;base64,","")
+                    console.log(data)
+                    $.post("http://192.168.0.104:8085/capture",JSON.stringify(data), function(data, status){
+                    $("#out").html(data["caption"])
+                    $("#voice_button").css("display","inline-block")
+                    $(".label").css("display","none")
+                    audio=data["caption"]
+                    console.log("Data: " + JSON.stringify(data["caption"]) + "\nStatus: " + status)
+                })
+                };
+                fileReader.readAsDataURL($('#file-input').prop('files')[0]);
+           })
+           
+          </script>
+    </form>
+    <button id="voice_button" onclick="say(audio);"></button>
+
+    </BODY>
+</HTML>
